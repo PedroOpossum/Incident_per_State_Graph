@@ -5,7 +5,7 @@ import requests
 from io import StringIO
 
 
-stateInput = input("Enter the state you want: ")
+urlState = "https://www.bls.gov/iif/state-data/archive.htm#NJ"
 
 
 headers = {
@@ -15,14 +15,25 @@ headers = {
     }
 
 
-url = f"https://www.bls.gov/iif/state-data/fatal-occupational-injuries-in-{stateInput}-2023.htm"
-
 try:
-    injuryTable = requests.get(url, headers=headers, timeout = 5)
-    data = pd.read_html(StringIO(injuryTable.text))
+    stateTable = requests.get(urlState, headers=headers, timeout = 5)
+    data = pd.read_html(StringIO(stateTable.text))
     df = data[0]
+    df = df[["State", "Fatal Injury Counts"]]
 
-    print(df.head())
+    states = (
+        df["State"]
+        .str.lower()
+        .iloc[1:]
+        .str.replace(" ", "-")
+        .tolist()
+    )
+
+    for stateLoop in states:
+        urlInjury = f"https://www.bls.gov/iif/state-data/fatal-occupational-injuries-in-{stateLoop}-2023.htm"
+        print(urlInjury)
+
+
 
 except requests.exceptions.Timeout:
     print("\nERROR: The request timed out.")
